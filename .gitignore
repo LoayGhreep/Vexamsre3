@@ -1,5 +1,30 @@
+# Java
+*.class
+
+# Maven
 target/
-*.iml
+!.mvn/wrapper/maven-wrapper.jar
+**/logs/
+**/*.log
+mvnw.cmd
+mvnw
+
+# IDEs
 .idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.sw?
+
+# OS Junk
 .DS_Store
-*.log
+Thumbs.db
+
+# Docker
+*.tar
+*.jar
+.dockerignore
+docker-compose.override.yml
+docker-compose.yml
+.env
