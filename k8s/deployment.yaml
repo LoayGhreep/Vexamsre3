@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-k8s-demo
+  labels:
+    app: java-k8s-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: java-k8s-demo
+  template:
+    metadata:
+      labels:
+        app: java-k8s-demo
+    spec:
+      containers:
+        - name: java-app
+          image: java-k8s-demo:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
