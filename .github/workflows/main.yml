@@ -22,12 +22,15 @@ jobs:
       - name: Build with Maven
         run: mvn clean package
 
+      - name: Rename JAR to app.jar
+        run: mv target/*.jar target/app.jar
+
   deploy_dev:
     runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Deploy to DEV (Simulated)
-        run: echo "✅ Deployed to DEV"
+        run: echo "Deployed to DEV"
 
   deploy_test:
     runs-on: ubuntu-latest
@@ -35,12 +38,17 @@ jobs:
     needs: deploy_dev
     steps:
       - name: Deploy to TEST (Simulated)
-        run: echo "✅ Deployed to TEST"
+        run: echo "Deployed to TEST"
 
   deploy_stg:
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/master' }}
     needs: build
+    environment: staging
     steps:
-      - name: Deploy to STAGING (Simulated)
-        run: echo "✅ Deployed to STAGING"
+      - name: Simulated Deployment to STAGING via SCP/SSH
+        run: |
+          echo "scp -i mock-key.pem target/app.jar ec2-user@1.2.3.4:/home/ec2-user/"
+          echo "ssh -i mock-key.pem ec2-user@1.2.3.4 'pkill -f java -jar'"
+          echo "ssh -i mock-key.pem ec2-user@1.2.3.4 'mv /home/ec2-user/app.jar /home/ec2-user/app-latest.jar'"
+          echo "ssh -i mock-key.pem ec2-user@1.2.3.4 'nohup java -jar /home/ec2-user/app-latest.jar &'"
