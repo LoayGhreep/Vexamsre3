@@ -36,8 +36,13 @@ jobs:
 
       - name: Set Namespace and Tag
         run: |
-          echo "DEPLOY_NAMESPACE=$( [ '${{ github.ref_name }}' = 'master' ] && echo 'stg' || echo 'dev' )" >> $GITHUB_ENV
-          echo "IMAGE_TAG=java-k8s-demo-$DEPLOY_NAMESPACE" >> $GITHUB_ENV
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            echo "DEPLOY_NAMESPACE=stg" >> $GITHUB_ENV
+            echo "IMAGE_TAG=java-k8s-demo-stg" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_NAMESPACE=dev" >> $GITHUB_ENV
+            echo "IMAGE_TAG=java-k8s-demo-dev" >> $GITHUB_ENV
+          fi
 
       - name: Build Docker Image
         run: docker build -t ghcr.io/loayghreep/${{ env.IMAGE_TAG }}:${{ github.ref_name }} .
@@ -55,8 +60,13 @@ jobs:
     steps:
       - name: Set Namespace and Tag Again
         run: |
-          echo "DEPLOY_NAMESPACE=$( [ '${{ github.ref_name }}' = 'master' ] && echo 'stg' || echo 'dev' )" >> $GITHUB_ENV
-          echo "IMAGE_TAG=java-k8s-demo-$DEPLOY_NAMESPACE" >> $GITHUB_ENV
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            echo "DEPLOY_NAMESPACE=stg" >> $GITHUB_ENV
+            echo "IMAGE_TAG=java-k8s-demo-stg" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_NAMESPACE=dev" >> $GITHUB_ENV
+            echo "IMAGE_TAG=java-k8s-demo-dev" >> $GITHUB_ENV
+          fi
 
       - name: Simulate aws eks update-kubeconfig
         run: |
@@ -64,8 +74,8 @@ jobs:
 
       - name: Simulate Apply Manifests with Dynamic Namespace
         run: |
-          sed "s/NS_ENV/$DEPLOY_NAMESPACE/g" k8s/deployment.yaml | tee k8s/_deployment.yaml | kubectl apply -f -
-          sed "s/NS_ENV/$DEPLOY_NAMESPACE/g" k8s/service.yaml | tee k8s/_service.yaml | kubectl apply -f -
+          sed "s/NS_ENV/${{ env.DEPLOY_NAMESPACE }}/g" k8s/deployment.yaml | tee k8s/_deployment.yaml | kubectl apply -f -
+          sed "s/NS_ENV/${{ env.DEPLOY_NAMESPACE }}/g" k8s/service.yaml | tee k8s/_service.yaml | kubectl apply -f -
 
       - name: Simulate Rolling Update
         run: |
