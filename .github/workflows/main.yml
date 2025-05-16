@@ -27,33 +27,46 @@ jobs:
         run: mv target/*.jar target/app.jar
 
   dockerize:
-    name: Build and Tag Docker Image
+    name: Build, Tag, and Push Docker Image
     runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Build Docker Image
-        run: docker build -t ghcr.io/loayghreep/java-k8s-demo:${{ github.ref_name }} .
+      - name: Set Namespace and Tag
+        run: |
+          echo "DEPLOY_NAMESPACE=$( [ '${{ github.ref_name }}' = 'master' ] && echo 'stg' || echo 'dev' )" >> $GITHUB_ENV
+          echo "IMAGE_TAG=java-k8s-demo-$DEPLOY_NAMESPACE" >> $GITHUB_ENV
 
-      - name: List Docker Images
-        run: docker images | grep java-k8s-demo || echo "Image not found"
+      - name: Build Docker Image
+        run: docker build -t ghcr.io/loayghreep/${{ env.IMAGE_TAG }}:${{ github.ref_name }} .
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push Docker Image
+        run: docker push ghcr.io/loayghreep/${{ env.IMAGE_TAG }}:${{ github.ref_name }}
 
   deploy:
     name: Simulate Deploy to EKS
     runs-on: ubuntu-latest
     needs: dockerize
     steps:
+      - name: Set Namespace and Tag Again
+        run: |
+          echo "DEPLOY_NAMESPACE=$( [ '${{ github.ref_name }}' = 'master' ] && echo 'stg' || echo 'dev' )" >> $GITHUB_ENV
+          echo "IMAGE_TAG=java-k8s-demo-$DEPLOY_NAMESPACE" >> $GITHUB_ENV
+
       - name: Simulate aws eks update-kubeconfig
         run: |
           echo "aws eks update-kubeconfig --region us-east-1 --name my-cluster"
 
-      - name: Simulate Apply Manifests
+      - name: Simulate Apply Manifests with Dynamic Namespace
         run: |
-          echo "kubectl apply -f k8s/deployment.yaml"
-          echo "kubectl apply -f k8s/service.yaml"
+          sed "s/NS_ENV/$DEPLOY_NAMESPACE/g" k8s/deployment.yaml | tee k8s/_deployment.yaml | kubectl apply -f -
+          sed "s/NS_ENV/$DEPLOY_NAMESPACE/g" k8s/service.yaml | tee k8s/_service.yaml | kubectl apply -f -
 
-      - name: Simulate Image Update in Deployment
+      - name: Simulate Rolling Update
         run: |
-          echo "kubectl set image deployment/java-k8s-demo java-app=ghcr.io/loayghreep/java-k8s-demo:${{ github.ref_name }}"
+          echo "kubectl -n $DEPLOY_NAMESPACE set image deployment/java-k8s-demo java-app=ghcr.io/loayghreep/${{ env.IMAGE_TAG }}:${{ github.ref_name }}"
