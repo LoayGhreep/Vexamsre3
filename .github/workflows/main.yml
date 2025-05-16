@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build Docker Image
-        run: docker build -t ghcr.io/LoayGhreep/java-k8s-demo:${{ github.ref_name }} .
+        run: docker build -t ghcr.io/loayghreep/java-k8s-demo:${{ github.ref_name }} .
 
       - name: List Docker Images
         run: docker images | grep java-k8s-demo || echo "Image not found"
@@ -56,4 +56,4 @@ jobs:
 
       - name: Simulate Image Update in Deployment
         run: |
-          echo "kubectl set image deployment/java-k8s-demo java-app=ghcr.io/LoayGhreep/java-k8s-demo:${{ github.ref_name }}"
+          echo "kubectl set image deployment/java-k8s-demo java-app=ghcr.io/loayghreep/java-k8s-demo:${{ github.ref_name }}"
