@@ -2,7 +2,7 @@
 
 This project demonstrates a full CI/CD pipeline for the same app in Vexamsre2, but containerized and deployed to EKS
 <p align="center">
-  <img src="https://raw.githubusercontent.com/LoayGhreep/Vexamsre3/refs/heads/master/arch.svg" alt="Flow Diagram" width="100%"/>
+  <img src="https://raw.githubusercontent.com/LoayGhreep/Vexamsre3/refs/heads/master/flow.svg" alt="Flow Diagram" width="100%"/>
   <br/>
 </p>
 ---
